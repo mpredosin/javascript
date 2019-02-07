@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+<h2>
+Bouncing Balls
+</h2>
+
+<canvas id="myCanvas" width="1280" height="720" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.
+</canvas>
+
+<script>
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+var width = canvas.width;
+var height = canvas.height;
+
+var ball_size = 10;
+var num_balls = 100;
+
+var random = function(min, max)
+{
+    return Math.floor(Math.random() * (max - min + 1) ) + min;
+}
+
+var Color = function(r,g,b) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+};
+
+var fill = function(color) {
+    var cr = 'rgb('+color.r+','+color.g+','+color.b+')';
+    ctx.fillStyle = cr;
+};
+
+var rect = function(x,y,w,h) {
+    ctx.fillRect(x,y,w,h);
+};
+
+var background = function(r,g,b)
+{
+    fill(new Color(r,g,b));
+    ctx.fillRect(0, 0, width, height);
+};
+
+var Rectangle = function(x, y, width, height, color)
+{
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.color = color;
+    
+    this.intersects = function(other) {
+        return (this.x<other.x+other.width) && 
+            (other.x<this.x+this.width) &&
+            (this.y<other.y+other.height) &&
+            (other.y<this.y+this.height);
+    };
+};
+
+Rectangle.prototype.toString = function() {
+    return "x="+this.x+
+        ",y="+this.y+
+        ",width="+this.width+
+        ",height="+this.height;
+};
+
+Rectangle.prototype.draw = function() {
+    fill(this.color);
+    rect(this.x,this.y,this.width,this.height);
+};
+
+var AnimatedRectangle = function(x,y,width,height,color,stepx,stepy)
+{
+    Rectangle.call(this,x,y,width,height,color);
+    this.stepx = stepx;
+    this.stepy = stepy;
+};
+
+AnimatedRectangle.prototype = Object.create(Rectangle.prototype);
+
+AnimatedRectangle.prototype.toString = function() {
+    return "x="+this.x+
+        ",y="+this.y+
+        ",width="+this.width+
+        ",height="+this.height+
+        ",stepx="+this.stepx+
+        ",stepy="+this.stepy;
+};
+
+AnimatedRectangle.prototype.draw = function() {
+    this.x = this.x + this.stepx;
+    this.y = this.y + this.stepy;
+
+    if(this.x < 0) {
+        this.x = 0;
+        this.stepx = -this.stepx;
+    }
+    else if((this.x+this.width) > width) {
+        this.x = width-this.width;
+        this.stepx = -this.stepx;
+    }
+    if(this.y < 0) {
+        this.y = 0;
+        this.stepy = -this.stepy;
+    }
+    else if((this.y+this.height) > height) {
+        this.y = height-this.height;
+        this.stepy = -this.stepy;
+    }
+    
+    fill(this.color);
+    rect(this.x,this.y,this.width,this.height);
+};
+
+var balls = [];
+{
+    for(var i=0; i<num_balls; i++) {
+        var dx = random(-10,10);
+        if(dx >= 0 && dx < 5) {
+            dx+=5;
+        }
+        else if(dx<0 && dx>-5) {
+            dx-=5;
+        }
+        var dy = random(-10,10);
+        if(dy >= 0 && dy < 5) {
+            dy+=5;
+        }
+        else if(dx<0 && dx>-5) {
+            dy-=5;
+        }
+        
+        balls.push(new AnimatedRectangle(random(0,width),random(0,height),ball_size,ball_size,new Color(random(0,255),random(0,255),random(0,255)),dx,dy));
+        
+    }
+}
+    
+draw = function() {
+
+    background(255,255,255);
+    
+    for(var i=0; i<balls.length; i++) {
+        balls[i].draw();
+    }
+};
+
+setInterval(draw, 16.67);  // 60fps
+
+</script>
+
+</body>
+</html>
+
