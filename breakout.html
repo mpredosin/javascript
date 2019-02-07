@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+<h2>
+Breakout
+</h2>
+
+<canvas id="myCanvas" width="600" height="600" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.
+</canvas>
+
+<script>
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+var width = canvas.width;
+var height = canvas.height;
+
+var ball_size = 10;
+var num_balls = 100;
+
+var random = function(min, max)
+{
+    return Math.floor(Math.random() * (max - min + 1) ) + min;
+}
+
+var Color = function(r,g,b) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+};
+
+var fill = function(color) {
+    var cr = 'rgb('+color.r+','+color.g+','+color.b+')';
+    ctx.fillStyle = cr;
+};
+
+var rect = function(x,y,w,h) {
+    ctx.fillRect(x,y,w,h);
+};
+
+var background = function(r,g,b)
+{
+    fill(new Color(r,g,b));
+    ctx.fillRect(0, 0, width, height);
+};
+
+var createFont = function(name, size) {
+    return size+'px '+name;
+};
+
+var textFont = function(name) {
+    ctx.font = name;
+};
+
+var text = function(str, x, y) {
+    ctx.fillText(str, x, y);
+};
+
+var textWidth = function(str) {
+    return ctx.measureText(str).width;
+};
+
+var getSound = function() {
+    return new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");  
+};
+
+var playSound = function(sound) {
+    sound.play();
+};
+
+var score = 0;
+var paddle_step = 20;
+var paddle_width=100;
+var paddle_height=10;
+var ball_size = 10;
+var ball_stepy = -6;
+var blocks = [];
+
+var fontSize = 18;
+var font = createFont("monospace",fontSize);
+textFont(font);
+
+var running = true;
+var end_text = "";
+var clink = getSound();
+
+var Rectangle = function(x, y, width, height, color)
+{
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.color = color;
+    
+    this.intersects = function(other) {
+        return (this.x<other.x+other.width) && 
+            (other.x<this.x+this.width) &&
+            (this.y<other.y+other.height) &&
+            (other.y<this.y+this.height);
+    };
+};
+
+Rectangle.prototype.toString = function() {
+    return "x="+this.x+
+        ",y="+this.y+
+        ",width="+this.width+
+        ",height="+this.height;
+};
+
+Rectangle.prototype.draw = function() {
+    fill(this.color);
+    rect(this.x,this.y,this.width,this.height);
+};
+
+var AnimatedRectangle = function(x,y,width,height,color,stepx,stepy)
+{
+    Rectangle.call(this,x,y,width,height,color);
+    this.stepx = stepx;
+    this.stepy = stepy;
+};
+
+AnimatedRectangle.prototype = Object.create(Rectangle.prototype);
+
+AnimatedRectangle.prototype.toString = function() {
+    return "x="+this.x+
+        ",y="+this.y+
+        ",width="+this.width+
+        ",height="+this.height+
+        ",stepx="+this.stepx+
+        ",stepy="+this.stepy;
+};
+
+AnimatedRectangle.prototype.draw = function() {
+    this.x = this.x + this.stepx;
+    this.y = this.y + this.stepy;
+
+    if(this.x < 0) {
+        this.x = 0;
+        this.stepx = -this.stepx;
+        playSound(clink);
+    }
+    else if((this.x+this.width) > width) {
+        this.x = width-this.width;
+        this.stepx = -this.stepx;
+        playSound(clink);
+    }
+    if(this.y < 0) {
+        this.y = 0;
+        this.stepy = -this.stepy;
+        playSound(clink);
+    }
+    else if((this.y+this.height) > height) {
+        this.y = height-this.height;
+        this.stepy = -this.stepy;
+    }
+    
+    fill(this.color);
+    rect(this.x,this.y,this.width,this.height);
+};
+
+var paddle = new Rectangle((width-paddle_width)/2,
+    height-paddle_height,
+    paddle_width,paddle_height,new Color(0,0,0));
+
+var ball = new AnimatedRectangle((width-ball_size)/2,height/2,ball_size,ball_size,new Color(0,0,0),0,ball_stepy);
+
+{
+    var i=20;
+    var color = new Color(0,0,255);
+    while(i<width-20) {
+        blocks.push(new Rectangle(i,40,20,20,color));
+        i+=40;
+    }
+}
+
+var black = new Color(0,0,0);
+
+draw = function() {
+
+    background(255,255,255);
+    
+    fill(black);
+    text("score:"+score,0,fontSize);
+
+    // draw paddle
+    paddle.draw();
+
+    if(!running) {
+        text(end_text,(width-textWidth(end_text))/2,height/2);
+    }
+    else {
+        // draw ball
+        ball.draw();
+    }
+
+    var blocks_left = 0;
+    for(var i=0; i<blocks.length; i++) {
+        if(blocks[i] !== undefined) {
+            if(ball.intersects(blocks[i])) {
+                blocks[i] = undefined;
+                playSound(clink);
+                ball.stepy = -ball.stepy;
+                score++;
+            }
+            else {
+                blocks[i].draw();
+                blocks_left++;
+            }
+        }
+    }
+
+    if(paddle.intersects(ball)) {
+        var paddle_mid = paddle.x+paddle.width/2;
+        var ball_mid = ball.x+ball.width/2;
+        var step=(ball_mid-paddle_mid)/20;
+
+        ball.stepx += step;
+        ball.stepy = -ball.stepy;
+        playSound(clink);
+    }
+    
+    if(ball.y >= height-ball.height) {
+        running = false;
+        end_text = "game over";
+    }
+    else if(blocks_left === 0) {
+        running = false;
+        end_text = "you win";
+    }
+};
+
+keyPressed = function(e) {
+    
+    if(!running) {
+        return;
+    }
+    
+    // left arrow
+    if(e.keyCode === 37) {
+        paddle.x = paddle.x - paddle_step;
+    }
+    // right arrow
+    else if(e.keyCode === 39) {
+        paddle.x = paddle.x + paddle_step;
+    }
+
+    // bounds checking
+    if(paddle.x<0) {
+        paddle.x=0;
+    }
+    if(paddle.x+paddle.width>width) {
+        paddle.x = width-paddle.width-1;
+    }
+};
+
+window.addEventListener('keydown', keyPressed);
+
+setInterval(draw, 16.67);  // 60fps
+
+</script>
+
+</body>
+</html>
+
