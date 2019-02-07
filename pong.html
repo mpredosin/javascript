@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+</head>
+<body>
+<h2>
+Pong
+</h2>
+
+<canvas id="myCanvas" width="600" height="600" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.
+</canvas>
+
+<script>
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+var width = canvas.width;
+var height = canvas.height;
+
+var ball_size = 10;
+var num_balls = 100;
+
+var random = function(min, max)
+{
+    return Math.floor(Math.random() * (max - min + 1) ) + min;
+}
+
+var Color = function(r,g,b) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+};
+
+var fill = function(color) {
+    var cr = 'rgb('+color.r+','+color.g+','+color.b+')';
+    ctx.fillStyle = cr;
+};
+
+var rect = function(x,y,w,h) {
+    ctx.fillRect(x,y,w,h);
+};
+
+var background = function(r,g,b)
+{
+    fill(new Color(r,g,b));
+    ctx.fillRect(0, 0, width, height);
+};
+
+var createFont = function(name, size) {
+    return size+'px '+name;
+};
+
+var textFont = function(name) {
+    ctx.font = name;
+};
+
+var text = function(str, x, y) {
+    ctx.fillText(str, x, y);
+};
+
+var textWidth = function(str) {
+    return ctx.measureText(str).width;
+};
+
+var getSound = function(path) {
+};
+
+var playSound = function(sound) {
+};
+
+var score = 0;
+var paddle1_step = 20;
+var paddle2_step = 7;
+var paddle_width=100;
+var paddle_height=10;
+var ball_size = 10;
+var ball_stepy = -6;
+
+var font = createFont("monospace",18);
+textFont(font);
+
+var running = true;
+var end_text = "";
+var clink = getSound("rpg/metal-clink");
+
+var Rectangle = function(x, y, width, height, color)
+{
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+    this.color = color;
+    
+    this.intersects = function(other) {
+        return (this.x<other.x+other.width) && 
+            (other.x<this.x+this.width) &&
+            (this.y<other.y+other.height) &&
+            (other.y<this.y+this.height);
+    };
+};
+
+Rectangle.prototype.toString = function() {
+    return "x="+this.x+
+        ",y="+this.y+
+        ",width="+this.width+
+        ",height="+this.height;
+};
+
+Rectangle.prototype.draw = function() {
+    fill(this.color);
+    rect(this.x,this.y,this.width,this.height);
+};
+
+var AnimatedRectangle = function(x,y,width,height,color,stepx,stepy)
+{
+    Rectangle.call(this,x,y,width,height,color);
+    this.stepx = stepx;
+    this.stepy = stepy;
+};
+
+AnimatedRectangle.prototype = Object.create(Rectangle.prototype);
+
+AnimatedRectangle.prototype.toString = function() {
+    return "x="+this.x+
+        ",y="+this.y+
+        ",width="+this.width+
+        ",height="+this.height+
+        ",stepx="+this.stepx+
+        ",stepy="+this.stepy;
+};
+
+AnimatedRectangle.prototype.draw = function() {
+    this.x = this.x + this.stepx;
+    this.y = this.y + this.stepy;
+
+    if(this.x < 0) {
+        this.x = 0;
+        this.stepx = -this.stepx;
+        playSound(clink);
+    }
+    else if((this.x+this.width) > width) {
+        this.x = width-this.width;
+        this.stepx = -this.stepx;
+        playSound(clink);
+    }
+    if(this.y < 0) {
+        this.y = 0;
+        this.stepy = -this.stepy;
+        playSound(clink);
+    }
+    else if((this.y+this.height) > height) {
+        this.y = height-this.height;
+        this.stepy = -this.stepy;
+    }
+    
+    fill(this.color);
+    rect(this.x,this.y,this.width,this.height);
+};
+
+var paddle1 = new Rectangle(
+    (width-paddle_width)/2,
+    height-paddle_height,
+    paddle_width,paddle_height,new Color(0,0,0));
+
+var paddle2 = new Rectangle(
+    (width-paddle_width)/2,
+    0,
+    paddle_width,paddle_height,new Color(0,0,0));
+
+var ball = new AnimatedRectangle((width-ball_size)/2,height/2,ball_size,ball_size,new Color(0,0,0),0,ball_stepy);
+
+draw = function() {
+
+    background(255,255,255);
+
+    // draw paddles
+    paddle1.draw();
+    paddle2.draw();
+
+    if(!running) {
+        text(end_text,(width-textWidth(end_text))/2,height/2);
+    }
+    else {
+        // draw ball
+        ball.draw();
+
+        var ball_mid = ball.x+ball.width/2;
+        if(paddle1.intersects(ball)) {
+            var paddle_mid = paddle1.x+paddle1.width/2;
+            var step=(ball_mid-paddle_mid)/20;
+            ball.stepx += step;
+            ball.stepy = -ball.stepy;
+            playSound(clink);
+        }
+    
+        var paddle2_mid = paddle2.x+paddle2.width/2;
+        if(paddle2.intersects(ball)) {
+            var paddle_mid = paddle2.x+paddle2.width/2;
+            var step=(ball_mid-paddle2_mid)/20;
+            ball.stepx += step;
+            ball.stepy = -ball.stepy;
+            playSound(clink);
+        }
+    
+        if(paddle2_mid+paddle2.width/4 < ball_mid) {
+            paddle2.x += paddle2_step;
+        }
+        else if(paddle2_mid-paddle2.width/4 > ball_mid) {
+            paddle2.x -= paddle2_step;
+        }
+
+        // bounds checking
+        if(paddle2.x<0) {
+            paddle2.x=0;
+        }
+        if(paddle2.x+paddle2.width>width) {
+            paddle2.x = width-paddle2.width-1;
+        }
+    }
+    
+    if(ball.y < 1) {
+        running = false;
+        end_text = "you win";
+    }
+    if(ball.y >= height-ball.height) {
+        running = false;
+        end_text = "you lose";
+    }
+};
+
+keyPressed = function(e) {
+
+    if(!running) {
+        return;
+    }
+    
+    // left arrow
+    if(e.keyCode === 37) {
+        paddle1.x = paddle1.x - paddle1_step;
+    }
+    // right arrow
+    else if(e.keyCode === 39) {
+        paddle1.x = paddle1.x + paddle1_step;
+    }
+
+    // bounds checking
+    if(paddle1.x<0) {
+        paddle1.x=0;
+    }
+    if(paddle1.x+paddle1.width>width) {
+        paddle1.x = width-paddle1.width-1;
+    }
+};
+
+window.addEventListener('keydown', keyPressed);
+
+setInterval(draw, 16.67);  // 60fps
+
+</script>
+
+</body>
+</html>
