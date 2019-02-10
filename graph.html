@@ -50,7 +50,7 @@ class Graph {
     }
     
     vertices() {
-        return this.adjList.values();
+        return this.adjList.keys();
     }
     
     edges(v) {
@@ -69,12 +69,9 @@ class Graph {
 
 var g = new Graph();
 var vertices = [ 'A', 'B', 'C', 'D', 'E', 'F','G','H' ]; 
-var nodes= nodes = new vis.DataSet();
-var edges = new vis.DataSet();
 
 for (var i = 0; i < vertices.length; i++) { 
     g.addVertex(vertices[i]);
-    nodes.add({id:vertices[i], label:vertices[i]});
 }
 
 for (var i = 0; i < vertices.length*2; i++) {
@@ -83,7 +80,6 @@ for (var i = 0; i < vertices.length*2; i++) {
     while(r1 == r2)
         r2 = getRandomInt(vertices.length);
     g.addEdge(vertices[r1], vertices[r2]);
-    edges.add({from: vertices[r1], to: vertices[r2]});
 }
 
 g.printGraph();
@@ -92,6 +88,16 @@ g.printGraph();
 var container = document.getElementById('mynetwork');
 
 // provide the data in the vis format
+var nodes = new vis.DataSet();
+var edges = new vis.DataSet();
+
+for(v of g.vertices()) {
+    nodes.add({id:v, label:v});
+    for(e of g.edges(v)) {
+        edges.add({from: v, to: e});
+    }
+}
+
 var data = {
     nodes: nodes,
     edges: edges
