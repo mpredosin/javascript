@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script type="text/javascript" src="vis/vis.min.js"></script>
+    <link href="vis/vis.min.css" rel="stylesheet" type="text/css" />
+
+    <style type="text/css">
+        #mynetwork {
+            width: 600px;
+            height: 600px;
+            border: 1px solid lightgray;
+        }
+    </style>
+</head>
+<body>
+<h2>
+Graph
+</h2>
+
+<div id="mynetwork"></div>
+
+<script>
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * Math.floor(max));
+}
+
+class Graph {
+    
+    constructor() {
+        this.adjList = new Map();
+        this.num_vertices = 0;
+        this.num_edges = 0;
+    }
+    
+    addVertex(v) {
+        if(!this.adjList.has(v)) {
+            this.adjList.set(v, new Set());
+            this.num_vertices++;
+        }
+    }
+    
+    addEdge(v, w) {
+        if(!this.adjList.has(v) || !this.adjList.has(w))
+            return;
+        this.adjList.get(v).add(w);
+        this.adjList.get(w).add(v);
+        this.num_edges++;
+    }
+    
+    vertices() {
+        return this.adjList.values();
+    }
+    
+    edges(v) {
+        return this.adjList.get(v).values();
+    }
+    
+    printGraph() {
+        for(var v of this.adjList.keys()) {
+            var edges = "";
+            for(var e of this.adjList.get(v))
+                edges += " " + e;
+            console.log(v+edges);
+        }
+    }
+}
+
+var g = new Graph();
+var vertices = [ 'A', 'B', 'C', 'D', 'E', 'F','G','H' ]; 
+var nodes= nodes = new vis.DataSet();
+var edges = new vis.DataSet();
+
+for (var i = 0; i < vertices.length; i++) { 
+    g.addVertex(vertices[i]);
+    nodes.add({id:vertices[i], label:vertices[i]});
+}
+
+for (var i = 0; i < vertices.length*2; i++) {
+    var r1 = getRandomInt(vertices.length);
+    var r2 = getRandomInt(vertices.length);
+    while(r1 == r2)
+        r2 = getRandomInt(vertices.length);
+    g.addEdge(vertices[r1], vertices[r2]);
+    edges.add({from: vertices[r1], to: vertices[r2]});
+}
+
+g.printGraph();
+
+// get the container for graph
+var container = document.getElementById('mynetwork');
+
+// provide the data in the vis format
+var data = {
+    nodes: nodes,
+    edges: edges
+};
+
+var options = {};
+var network = new vis.Network(container, data, options);
+
+</script>
+</body>
+</html>
