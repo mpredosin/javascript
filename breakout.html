@@ -12,9 +12,12 @@ Breakout
 Your browser does not support the HTML5 canvas tag.
 </canvas>
 
+<div id="fpsDisplay"></div>
+
 <script>
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
+var fpsDisplay = document.getElementById('fpsDisplay');
 
 var width = canvas.width;
 var height = canvas.height;
@@ -179,7 +182,11 @@ var ball = new AnimatedRectangle((width-ball_size)/2,height/2,ball_size,ball_siz
 
 var black = new Color(0,0,0);
 
-draw = function() {
+var fps = 60,
+    framesThisSecond = 0,
+    lastFpsUpdate = 0;
+
+mainLoop = function(timestamp) {
 
     background(255,255,255);
     
@@ -231,6 +238,18 @@ draw = function() {
         running = false;
         end_text = "you win";
     }
+
+    if (timestamp > lastFpsUpdate + 1000) { // update every second
+        fps = 0.25 * framesThisSecond + (1 - 0.25) * fps; // compute the new FPS
+
+        lastFpsUpdate = timestamp;
+        framesThisSecond = 0;
+    }
+    framesThisSecond++;
+
+    fpsDisplay.textContent = Math.round(fps) + " FPS"; // display the FPS
+
+    requestAnimationFrame(mainLoop);
 };
 
 keyPressed = function(e) {
@@ -259,7 +278,7 @@ keyPressed = function(e) {
 
 window.addEventListener('keydown', keyPressed);
 
-setInterval(draw, 16.67);  // 60fps
+requestAnimationFrame(mainLoop);
 
 </script>
 
